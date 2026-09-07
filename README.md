@@ -1,13 +1,13 @@
 # mCRL2DY
 
-**mCRL2DY** is a demonstrator of a bounded Dolevâ€“Yao attacker modelled as a
+**mCRL2DY** is a demonstrator of a bounded Dolev-Yao attacker modelled as a
 monitor that executes in parallel with the honest participants of a security
 protocol.
 
 The project uses [mCRL2](https://www.mcrl2.org/) to describe the protocol,
 attacker knowledge, network interception, symbolic term derivation, and
 security goals in a single process-algebraic model. The included example is
-the Needhamâ€“Schroeder Public-Key protocol (NSPK) and its classic Lowe attack.
+the Needham-Schroeder Public-Key protocol (NSPK) and its classic Lowe attack.
 
 ## Core idea
 
@@ -44,10 +44,10 @@ receive action.
 At each iteration, the monitor nondeterministically chooses one of four
 operations:
 
-1. **Win** â€” emit `intruder_wins(goal)` when the goal belongs to its knowledge.
-2. **Inject** â€” select a known term and offer it to an honest participant.
-3. **Intercept** â€” receive a network term and add it to its knowledge.
-4. **Derive** â€” apply one constructor or destructor rule to known terms.
+1. **Win** - emit `intruder_wins(goal)` when the goal belongs to its knowledge.
+2. **Inject** - select a known term and offer it to an honest participant.
+3. **Intercept** - receive a network term and add it to its knowledge.
+4. **Derive** - apply one constructor or destructor rule to known terms.
 
 The NSPK attacker supports:
 
@@ -75,7 +75,7 @@ The default example uses a maximum knowledge cardinality of `16` and a maximum
 term depth of `2`. These values are sufficient for the intended Lowe-attack
 experiment while keeping exploration more manageable.
 
-This is an **under-approximation** of an unbounded Dolevâ€“Yao attacker. A found
+This is an **under-approximation** of an unbounded Dolev-Yao attacker. A found
 attack is a valid witness in the model, but failure to find one proves only
 that no attack exists within the selected bounds and modelling assumptions.
 
@@ -83,16 +83,15 @@ that no attack exists within the selected bounds and modelling assumptions.
 
 ```text
 mCRL2DY/
-â”œâ”€â”€ Makefile
-â”œâ”€â”€ README.md
-â”œâ”€â”€ intruder.mcrl2
-â”œâ”€â”€ example/
-â”‚   â””â”€â”€ alice_bob.mcrl2
-â”œâ”€â”€ goal/
-â”‚   â”œâ”€â”€ attack_reachable.mcf
-â”‚   â”œâ”€â”€ authentication_violation.mcf
-â”‚   â””â”€â”€ nonce_leak_reachable.mcf
-â””â”€â”€ build/                         # generated, ignored by Git
+- Makefile
+- README.md
+- intruder.mcrl2
+- example/
+  - alice_bob.mcrl2
+- goal/
+  - attack_reachable.mcf
+  - authentication_violation.mcf
+  - nonce_leak_reachable.mcf
 ```
 
 The build combines the honest protocol and attacker fragments into one complete
@@ -266,7 +265,7 @@ mCRL2DY is a research and teaching demonstrator, not a production protocol
 verification framework. In particular:
 
 - the example models one Alice session and one Bob session;
-- cryptography is perfect and symbolic, following the Dolevâ€“Yao abstraction;
+- cryptography is perfect and symbolic, following the Dolev-Yao abstraction;
 - attacker knowledge and term depth are bounded;
 - the well-typed attacker generates only protocol-relevant NSPK terms;
 - freshness, session replication, compromised principals, and additional
