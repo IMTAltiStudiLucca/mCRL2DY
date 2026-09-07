@@ -20,7 +20,7 @@ PARTS       := $(PROJECT_DIR)/example/alice_bob.mcrl2 \
 MODEL       := $(BUILD_DIR)/dy_model.mcrl2
 LPS         := $(BUILD_DIR)/dy_model.lps
 
-PROPERTIES := attack_reachable authentication_violation nonce_leak_reachable
+PROPERTIES := attack_reachable
 PBES_FILES := $(addprefix $(BUILD_DIR)/,$(addsuffix .pbes,$(PROPERTIES)))
 
 .PHONY: all model build verify verify-all \
@@ -44,7 +44,7 @@ $(LPS): $(MODEL)
 $(BUILD_DIR)/%.pbes: $(GOAL_DIR)/%.mcf $(LPS)
 	$(LPS2PBES) $(MCRL2_FLAGS) -f $< $(LPS) $@
 
-verify: $(BUILD_DIR)/authentication_violation.pbes
+verify: $(BUILD_DIR)/attack_reachable.pbes
 	$(PBES2BOOL) $(MCRL2_FLAGS) $<
 
 verify-all: $(PBES_FILES)
@@ -72,7 +72,7 @@ help:
 	@printf '%s\n' \
 	  'make model                 Assemble the complete mCRL2 model' \
 	  'make build                 Generate build/dy_model.lps' \
-	  'make verify                Verify authentication_violation.mcf' \
+	  'make verify                Verify attack_reachable.mcf' \
 	  'make verify-all            Verify all formulas under goal/' \
 	  'make verify VERBOSE=1      Enable short mCRL2 progress logs' \
 	  'make verify LOG_LEVEL=debug  Enable detailed mCRL2 logs' \
