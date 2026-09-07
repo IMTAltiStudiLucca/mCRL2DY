@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build mCRL2 model
+    runs-on: self-hosted
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Check dependencies
+        run: |
+          m4 --version
+          mcrl22lps --version
+
+      - name: Build model
+        run: make build VERBOSE=1
