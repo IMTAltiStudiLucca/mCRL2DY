@@ -28,7 +28,7 @@ operation:
 
 ```mermaid
 flowchart LR
-    A[Alice] <-->|intercept / inject| DY[Dolevâ€“Yao monitor]
+    A[Alice] <-->|intercept / inject| DY[Dolev-Yao monitor]
     DY <-->|intercept / inject| B[Bob]
     DY --> K[Bounded knowledge K]
     K --> DY
