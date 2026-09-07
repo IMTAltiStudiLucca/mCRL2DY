@@ -1,0 +1,54 @@
+# Generated build directory
+/build/
+
+# mCRL2 generated artifacts
+*.lps
+*.lts
+*.pbes
+*.bes
+*.aut
+*.fsm
+*.trc
+
+# Generated visualisations and solver output
+*.dot
+*.timings
+*.timings.log
+*.log
+
+# Temporary and backup files
+*.tmp
+*.temp
+*.bak
+*.orig
+*~
+.#*
+*.swp
+*.swo
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python helper-tool artifacts, if any
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# IDE and editor metadata
+.idea/
+.vscode/
+*.code-workspace
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Crash dumps
+core
+core.*
