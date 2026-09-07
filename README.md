@@ -198,7 +198,7 @@ lps2lts \
   --max=500000 \
   --cached \
   --rewriter=jittyc \
-  build/nspk_lowe.lps \
+  build/dy_model.lps \
   build/attack-search.lts
 ```
 
@@ -235,7 +235,7 @@ dot -Tpdf build/attack-trace.dot -o build/attack-trace.pdf
 Open the linear process in the graphical simulator:
 
 ```bash
-lpsxsim build/nspk_lowe.lps
+lpsxsim build/dy_model.lps
 ```
 
 A generated `.trc` file can then be loaded from the simulator interface and
