@@ -1,0 +1,2 @@
+% Bob can commit to Alice without a preceding matching Alice-to-Bob commit.
+<(!alice_commit(alice,bob,nb))*.bob_commit(bob,alice,nb)>true

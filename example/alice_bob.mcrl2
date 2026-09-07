@@ -1,0 +1,68 @@
+% Needham-Schroeder public-key protocol: honest participants and term algebra.
+
+sort
+  Agent = struct alice | bob | intruder;
+  Nonce = struct na | nb | ni;
+  Key   = struct pub(Agent) | sec(Agent);
+
+  Msg = struct
+      agent(Agent)
+    | nonce(Nonce)
+    | key(Key)
+    | pair(Msg, Msg)
+    | enc(Msg, Key);
+
+  % Canonical finite-set representation of attacker knowledge.
+  K = FSet(Msg);
+
+  Channel = struct channel_a | channel_b;
+
+map
+  is_public: Key -> Bool;
+  term_depth: Msg -> Nat;
+
+var
+  a: Agent;
+  n: Nonce;
+  k: Key;
+  m1, m2: Msg;
+
+eqn
+  is_public(pub(a)) = true;
+  is_public(sec(a)) = false;
+
+  term_depth(agent(a)) = 0;
+  term_depth(nonce(n)) = 0;
+  term_depth(key(k)) = 0;
+  term_depth(pair(m1, m2)) =
+    1 + max(term_depth(m1), term_depth(m2));
+  term_depth(enc(m1, k)) = 1 + term_depth(m1);
+
+act
+  honest_send, dy_sup, intercepted: Channel # Msg;
+  dy_ins, honest_receive, delivered: Channel # Msg;
+  derive, intruder_wins: Msg;
+  alice_commit, bob_commit: Agent # Agent # Nonce;
+
+proc
+  Alice =
+      honest_send(
+        channel_a,
+        enc(pair(nonce(na), agent(alice)), pub(intruder)))
+    . honest_receive(
+        channel_a,
+        enc(pair(nonce(na), nonce(nb)), pub(alice)))
+    . alice_commit(alice, intruder, nb)
+    . honest_send(channel_a, enc(nonce(nb), pub(intruder)))
+    . delta;
+
+  Bob =
+      honest_receive(
+        channel_b,
+        enc(pair(nonce(na), agent(alice)), pub(bob)))
+    . honest_send(
+        channel_b,
+        enc(pair(nonce(na), nonce(nb)), pub(alice)))
+    . honest_receive(channel_b, enc(nonce(nb), pub(bob)))
+    . bob_commit(bob, alice, nb)
+    . delta;

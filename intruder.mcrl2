@@ -1,0 +1,167 @@
+% Well-typed Dolev-Yao attacker for NSPK.
+% Bounds: at most 16 known terms, each with depth at most 2.
+
+proc
+  Ins(c: Channel, knowledge: K) =
+    sum x: Msg .
+      (x in knowledge) -> dy_ins(c, x);
+
+  Sup(c: Channel,
+      goal: Msg,
+      knowledge: K,
+      max_knowledge: Nat,
+      max_depth: Nat) =
+    sum x: Msg .
+      ((x in knowledge) || #knowledge < max_knowledge) ->
+        dy_sup(c, x)
+        . DY(goal,
+             knowledge + {x},
+             max_knowledge,
+             max_depth);
+
+  Der1(goal: Msg,
+       knowledge: K,
+       max_knowledge: Nat,
+       max_depth: Nat) =
+      % NSPK plaintext form 1: a nonce paired with an identity.
+      sum n: Nonce, claimed: Agent .
+        (#knowledge < max_knowledge &&
+         nonce(n) in knowledge &&
+         agent(claimed) in knowledge &&
+         !(pair(nonce(n), agent(claimed)) in knowledge) &&
+         term_depth(pair(nonce(n), agent(claimed))) <= max_depth) ->
+          derive(pair(nonce(n), agent(claimed)))
+          . DY(goal,
+               knowledge + {pair(nonce(n), agent(claimed))},
+               max_knowledge,
+               max_depth)
+
+    + % NSPK plaintext form 2: two nonces.
+      sum n1, n2: Nonce .
+        (#knowledge < max_knowledge &&
+         nonce(n1) in knowledge && nonce(n2) in knowledge &&
+         !(pair(nonce(n1), nonce(n2)) in knowledge) &&
+         term_depth(pair(nonce(n1), nonce(n2))) <= max_depth) ->
+          derive(pair(nonce(n1), nonce(n2)))
+          . DY(goal,
+               knowledge + {pair(nonce(n1), nonce(n2))},
+               max_knowledge,
+               max_depth)
+
+    + % NSPK message 1: encryption of nonce and claimed identity.
+      sum n: Nonce, claimed, receiver: Agent .
+        (#knowledge < max_knowledge &&
+         pair(nonce(n), agent(claimed)) in knowledge &&
+         key(pub(receiver)) in knowledge &&
+         !(enc(pair(nonce(n), agent(claimed)),
+               pub(receiver)) in knowledge) &&
+         term_depth(enc(pair(nonce(n), agent(claimed)),
+                        pub(receiver))) <= max_depth) ->
+          derive(enc(pair(nonce(n), agent(claimed)), pub(receiver)))
+          . DY(goal,
+               knowledge +
+                 {enc(pair(nonce(n), agent(claimed)), pub(receiver))},
+               max_knowledge,
+               max_depth)
+
+    + % NSPK message 2: encryption of two nonces.
+      sum n1, n2: Nonce, receiver: Agent .
+        (#knowledge < max_knowledge &&
+         pair(nonce(n1), nonce(n2)) in knowledge &&
+         key(pub(receiver)) in knowledge &&
+         !(enc(pair(nonce(n1), nonce(n2)),
+               pub(receiver)) in knowledge) &&
+         term_depth(enc(pair(nonce(n1), nonce(n2)),
+                        pub(receiver))) <= max_depth) ->
+          derive(enc(pair(nonce(n1), nonce(n2)), pub(receiver)))
+          . DY(goal,
+               knowledge +
+                 {enc(pair(nonce(n1), nonce(n2)), pub(receiver))},
+               max_knowledge,
+               max_depth)
+
+    + % NSPK message 3: encryption of a nonce.
+      sum n: Nonce, receiver: Agent .
+        (#knowledge < max_knowledge &&
+         nonce(n) in knowledge &&
+         key(pub(receiver)) in knowledge &&
+         !(enc(nonce(n), pub(receiver)) in knowledge) &&
+         term_depth(enc(nonce(n), pub(receiver))) <= max_depth) ->
+          derive(enc(nonce(n), pub(receiver)))
+          . DY(goal,
+               knowledge + {enc(nonce(n), pub(receiver))},
+               max_knowledge,
+               max_depth)
+
+    + % First projection.
+      sum x, y: Msg .
+        (#knowledge < max_knowledge &&
+         pair(x, y) in knowledge && !(x in knowledge)) ->
+          derive(x)
+          . DY(goal,
+               knowledge + {x},
+               max_knowledge,
+               max_depth)
+
+    + % Second projection.
+      sum x, y: Msg .
+        (#knowledge < max_knowledge &&
+         pair(x, y) in knowledge && !(y in knowledge)) ->
+          derive(y)
+          . DY(goal,
+               knowledge + {y},
+               max_knowledge,
+               max_depth)
+
+    + % Public-key decryption with a known matching private key.
+      sum x: Msg, a: Agent .
+        (#knowledge < max_knowledge &&
+         enc(x, pub(a)) in knowledge &&
+         key(sec(a)) in knowledge && !(x in knowledge)) ->
+          derive(x)
+          . DY(goal,
+               knowledge + {x},
+               max_knowledge,
+               max_depth);
+
+  DY(goal: Msg,
+     knowledge: K,
+     max_knowledge: Nat,
+     max_depth: Nat) =
+      (goal in knowledge) -> intruder_wins(goal) . delta
+
+    + (!(goal in knowledge)) ->
+        (sum c: Channel .
+           Ins(c, knowledge)
+           . DY(goal, knowledge, max_knowledge, max_depth))
+
+    + (!(goal in knowledge)) ->
+        (sum c: Channel .
+           Sup(c, goal, knowledge, max_knowledge, max_depth))
+
+    + (!(goal in knowledge) && #knowledge < max_knowledge) ->
+        Der1(goal, knowledge, max_knowledge, max_depth);
+
+init
+  allow(
+    { intercepted, delivered, derive, intruder_wins,
+      alice_commit, bob_commit },
+    comm(
+      { honest_send | dy_sup         -> intercepted,
+        dy_ins      | honest_receive -> delivered },
+      Alice
+      || Bob
+      || DY(
+           nonce(nb),
+           { agent(alice),
+             agent(bob),
+             agent(intruder),
+             nonce(ni),
+             key(pub(alice)),
+             key(pub(bob)),
+             key(pub(intruder)),
+             key(sec(intruder)) },
+           16,
+           2)
+    )
+  );

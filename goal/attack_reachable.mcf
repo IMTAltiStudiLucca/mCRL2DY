@@ -1,0 +1,2 @@
+% The generic DY process can derive the configured goal nonce(nb).
+<true*.intruder_wins(nonce(nb))>true
