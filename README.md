@@ -432,8 +432,4 @@ verification framework. In particular:
 The structure is intentionally modular: other honest protocols can replace the
 contents of `example/`, while the attacker process can be extended with the
 corresponding constructors, destructors, initial knowledge, channels, and
-<<<<<<< HEAD
-security goals.
-=======
 security goal.
->>>>>>> 21afab9359f486fdc0eac4af95fcae0c81667bc9
