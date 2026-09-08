@@ -1,6 +1,6 @@
 # mCRL2DY
 
-[![CI](https://github.com/IMTAltiStudiLucca/mCRL2DY/actions/workflows/ci.yml/badge.svg)](https://github.com/IMTAltiStudiLucca/mCRL2DY/actions/workflows/ci.yml)
+[![Build](https://github.com/IMTAltiStudiLucca/mCRL2DY/actions/workflows/ci.yml/badge.svg)](https://github.com/IMTAltiStudiLucca/mCRL2DY/actions/workflows/ci.yml)
 
 **mCRL2DY** is a demonstrator of a bounded Dolev-Yao attacker modelled as a
 monitor that executes in parallel with the honest participants of a security
