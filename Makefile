@@ -68,15 +68,80 @@ verify-all-verbose: verify-all
 clean:
 	rm -rf $(BUILD_DIR)
 
+# Attack-trace search configuration
+ATTACK_ACTION ?= intruder_wins
+ATTACK_MAX_STATES ?= 500000
+ATTACK_LPS ?= $(BUILD_DIR)/dy_model.lps
+ATTACK_TRACE_GLOB = $(ATTACK_LPS)_act_*_$(ATTACK_ACTION).trc
+
+.PHONY: attack-trace attack-trace-verbose show-attack clean-attack-traces
+
+attack-trace: $(ATTACK_LPS)
+	@echo "Searching for action '$(ATTACK_ACTION)'..."
+	@rm -f $(ATTACK_TRACE_GLOB)
+	lps2lts \
+		--cached \
+		--strategy=breadth \
+		--max=$(ATTACK_MAX_STATES) \
+		--action=$(ATTACK_ACTION) \
+		--trace=1 \
+		$(ATTACK_LPS)
+	@set -- $(ATTACK_TRACE_GLOB); \
+	if [ ! -e "$$1" ]; then \
+		echo "No attack trace found within $(ATTACK_MAX_STATES) states."; \
+		exit 1; \
+	fi
+	@echo "Attack trace generated:"
+	@ls -1 $(ATTACK_TRACE_GLOB)
+
+attack-trace-verbose: $(ATTACK_LPS)
+	@$(MAKE) attack-trace \
+		ATTACK_ACTION="$(ATTACK_ACTION)" \
+		ATTACK_MAX_STATES="$(ATTACK_MAX_STATES)" \
+		LPS2LTS_VERBOSE=1
+
+show-attack:
+	@set -- $(ATTACK_TRACE_GLOB); \
+	if [ ! -e "$$1" ]; then \
+		echo "No trace found. Run 'make attack-trace' first."; \
+		exit 1; \
+	fi; \
+	tracepp --format=plain "$$1"
+
+clean-attack-traces:
+	rm -f $(ATTACK_TRACE_GLOB)
+
 help:
-	@printf '%s\n' \
-	  'make model                 Assemble the complete mCRL2 model' \
-	  'make build                 Generate build/dy_model.lps' \
-	  'make verify                Verify attack_reachable.mcf' \
-	  'make verify-all            Verify all formulas under goal/' \
-	  'make verify VERBOSE=1      Enable short mCRL2 progress logs' \
-	  'make verify LOG_LEVEL=debug  Enable detailed mCRL2 logs' \
-	  'make verify-verbose        Alias for verbose verification' \
-	  'make verify-all-verbose    Verbosely verify every property' \
-	  'make build TIMINGS=1       Print timing measurements' \
-	  'make clean                 Remove generated files'
+	@echo "mCRL2DY — available targets"
+	@echo ""
+	@echo "Model construction:"
+	@echo "  make model                  Generate the combined mCRL2 model"
+	@echo "  make build                  Generate and linearise the model"
+	@echo "  make build-verbose          Build with verbose mCRL2 output"
+	@echo ""
+	@echo "Property verification:"
+	@echo "  make verify                 Verify the default property"
+	@echo "  make verify-all             Verify all properties in goal/"
+	@echo "  make verify-verbose         Verify with verbose output"
+	@echo ""
+	@echo "Attack-trace search:"
+	@echo "  make attack-trace           Find a trace leading to intruder_wins"
+	@echo "  make attack-trace-verbose   Find an attack trace with verbose output"
+	@echo "  make show-attack            Print the generated trace in plain format"
+	@echo "  make clean-attack-traces    Remove generated attack traces"
+	@echo ""
+	@echo "Cleaning:"
+	@echo "  make clean                  Remove all generated build artifacts"
+	@echo ""
+	@echo "Optional parameters:"
+	@echo "  ATTACK_ACTION=<action>      Action searched by lps2lts"
+	@echo "                              Default: intruder_wins"
+	@echo "  ATTACK_MAX_STATES=<number>  Maximum number of explored states"
+	@echo "                              Default: 500000"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make build-verbose"
+	@echo "  make attack-trace"
+	@echo "  make attack-trace-verbose ATTACK_MAX_STATES=1000000"
+	@echo "  make attack-trace ATTACK_ACTION=bob_commit"
+	@echo "  make show-attack"

@@ -2,14 +2,14 @@
 
 [![CI](https://github.com/IMTAltiStudiLucca/mCRL2DY/actions/workflows/ci.yml/badge.svg)](https://github.com/IMTAltiStudiLucca/mCRL2DY/actions/workflows/ci.yml)
 
-**mCRL2DY** is a demonstrator of a bounded Dolev-Yao attacker modelled as a
+**mCRL2DY** is a demonstrator of a bounded Dolev–Yao attacker modelled as a
 monitor that executes in parallel with the honest participants of a security
 protocol.
 
 The project uses [mCRL2](https://www.mcrl2.org/) to describe the protocol,
 attacker knowledge, network interception, symbolic term derivation, and
 security goals in a single process-algebraic model. The included example is
-the Needham-Schroeder Public-Key protocol (NSPK) and its classic Lowe attack.
+the Needham–Schroeder Public-Key protocol (NSPK) and its classic Lowe attack.
 
 ## Core idea
 
@@ -18,7 +18,7 @@ as an independent recursive process:
 
 ```text
 DY(goal, knowledge) =
-    win if goal is known
+    report success if the goal is known
   + inject a known term
   + intercept and learn a term
   + derive a new term
@@ -30,10 +30,9 @@ operation:
 
 ```mermaid
 flowchart LR
-    A[Alice] <-->|intercept / inject| DY[Dolev-Yao monitor]
+    A[Alice] <-->|intercept / inject| DY[Dolev–Yao monitor]
     DY <-->|intercept / inject| B[Bob]
-    DY --> K[Bounded knowledge K]
-    K --> DY
+    DY <--> K[Bounded knowledge K]
 ```
 
 The honest processes never communicate directly. An outgoing message
@@ -46,10 +45,10 @@ receive action.
 At each iteration, the monitor nondeterministically chooses one of four
 operations:
 
-1. **Win** - emit `intruder_wins(goal)` when the goal belongs to its knowledge.
-2. **Inject** - select a known term and offer it to an honest participant.
-3. **Intercept** - receive a network term and add it to its knowledge.
-4. **Derive** - apply one constructor or destructor rule to known terms.
+1. **Win** — emit `intruder_wins(goal)` when the goal belongs to its knowledge.
+2. **Inject** — select a known term and offer it to an honest participant.
+3. **Intercept** — receive a network term and add it to its knowledge.
+4. **Derive** — apply one constructor or destructor rule to known terms.
 
 The NSPK attacker supports:
 
@@ -61,7 +60,7 @@ The NSPK attacker supports:
 
 Nondeterministic selection is represented with the mCRL2 `sum` operator. DY
 knowledge is stored as an `FSet(Msg)`, giving a canonical set representation:
-duplicates and insertion order do not create semantically equivalent states.
+duplicates and insertion order do not create distinct knowledge states.
 
 ## Bounded analysis
 
@@ -75,9 +74,9 @@ a fixed point. The demonstrator therefore bounds:
 
 The default example uses a maximum knowledge cardinality of `16` and a maximum
 term depth of `2`. These values are sufficient for the intended Lowe-attack
-experiment while keeping exploration more manageable.
+experiment while keeping exploration manageable.
 
-This is an **under-approximation** of an unbounded Dolev-Yao attacker. A found
+This is an **under-approximation** of an unbounded Dolev–Yao attacker. A found
 attack is a valid witness in the model, but failure to find one proves only
 that no attack exists within the selected bounds and modelling assumptions.
 
@@ -85,19 +84,20 @@ that no attack exists within the selected bounds and modelling assumptions.
 
 ```text
 mCRL2DY/
-- Makefile
-- README.md
-- intruder.mcrl2
-- example/
-  - alice_bob.mcrl2
-- goal/
-  - attack_reachable.mcf
-  - authentication_violation.mcf
-  - nonce_leak_reachable.mcf
+├── Makefile
+├── README.md
+├── intruder.mcrl2
+├── example/
+│   └── alice_bob.mcrl2
+└── goal/
+    ├── attack_reachable.mcf
+    ├── authentication_violation.mcf
+    └── nonce_leak_reachable.mcf
 ```
 
-The build combines the honest protocol and attacker fragments into one complete
-mCRL2 specification before linearisation.
+The build combines the honest protocol and attacker fragments into a complete
+mCRL2 specification before linearisation. Generated files and traces are
+written under `build/`.
 
 ## Requirements
 
@@ -106,9 +106,10 @@ mCRL2 specification before linearisation.
 - GNU m4;
 - Graphviz, optionally, for rendering traces exported as DOT.
 
-The following mCRL2 commands should be available on `PATH`:
+The following commands should be available on `PATH`:
 
 ```bash
+m4 --version
 mcrl22lps --version
 lps2pbes --version
 pbes2bool --version
@@ -122,23 +123,57 @@ On Ubuntu, Make, m4, and Graphviz can be installed with:
 sudo apt install make m4 graphviz
 ```
 
-Install mCRL2 using the packages or binaries provided by the mCRL2 project.
+Install mCRL2 using a package or binary supplied by the mCRL2 project.
+
+## Make targets
+
+Run the built-in help to see all available targets and configuration
+variables:
+
+```bash
+make help
+```
+
+The main targets are:
+
+| Target | Purpose |
+| --- | --- |
+| `make model` | Generate the combined mCRL2 specification. |
+| `make build` | Generate and linearise the model. |
+| `make verify` | Verify the default modal property through a PBES. |
+| `make verify-all` | Verify all formulas under `goal/`. |
+| `make attack-trace` | Search for a concrete trace leading to `intruder_wins`. |
+| `make show-attack` | Print the generated attack trace in plain text. |
+| `make clean-attack-traces` | Remove generated attack traces. |
+| `make clean` | Remove generated build artefacts. |
+
+Verbose convenience targets are also available:
+
+```bash
+make build-verbose
+make verify-verbose
+make attack-trace-verbose
+```
 
 ## Build the model
 
-Generate the combined specification:
+Generate only the combined specification:
 
 ```bash
 make model
 ```
 
-Linearise it:
+Generate and linearise the complete model:
 
 ```bash
 make build
 ```
 
-Generated files are written under `build/`.
+The resulting linear process is:
+
+```text
+build/dy_model.lps
+```
 
 To rebuild everything from scratch:
 
@@ -149,27 +184,22 @@ make build
 
 ## Verify the security goals
 
-Verify the main authentication property:
+Verify the default property:
 
 ```bash
 make verify
 ```
 
-Verify all formulas under `goal/`:
+Verify every formula under `goal/`:
 
 ```bash
 make verify-all
 ```
 
-Enable progress messages:
+Enable progress messages using either form:
 
 ```bash
 make verify VERBOSE=1
-```
-
-or use the convenience target:
-
-```bash
 make verify-verbose
 ```
 
@@ -179,57 +209,62 @@ More detailed logging and timing information can be requested with:
 make verify LOG_LEVEL=debug TIMINGS=1
 ```
 
-For the vulnerable NSPK configuration, the reachability goals are intended to
-show that DY can learn `nonce(nb)` and emit:
+The final `true` or `false` printed by `pbes2bool` is the truth value of the
+formula, not an execution status. Its interpretation depends on how the
+corresponding `.mcf` property is written. For example:
 
-```mcrl2
-intruder_wins(nonce(nb))
-```
+- an existential reachability formula returning `true` means that a witness
+  exists;
+- a safety invariant returning `false` means that the invariant is violated;
+- an existential violation formula returning `false` means that the requested
+  violation was not found in the bounded model.
+
+The name of an `.mcf` file does not determine the meaning of the Boolean
+result; always inspect the formula itself.
 
 ## Search for an attack trace
 
-For an existential reachability goal, directly search the LPS for the victory
-action:
+To search the LPS for the default victory action and save one shortest witness:
 
 ```bash
-lps2lts \
-  --verbose \
-  --strategy=breadth \
-  --action=intruder_wins \
-  --trace=1 \
-  --max=500000 \
-  --cached \
-  --rewriter=jittyc \
-  build/dy_model.lps \
-  build/attack-search.lts
+make attack-trace
 ```
 
-If `jittyc` is unavailable, replace it with `jitty`.
+The target invokes `lps2lts` with breadth-first exploration, caching, a state
+limit, `--action=intruder_wins`, and `--trace=1`. It also checks that a `.trc`
+file was actually created; reaching the state limit without a trace therefore
+causes the target to fail.
 
-When the requested action is reached, `lps2lts` writes a `.trc` witness. Find
-generated traces with:
+Enable progress messages with:
 
 ```bash
-find . -type f -name '*.trc' -print
+make attack-trace-verbose
 ```
 
-Print a trace in human-readable form:
+The action and exploration bound can be overridden from the command line:
 
 ```bash
-tracepp --format=plain path/to/attack.trc
+make attack-trace ATTACK_ACTION=bob_commit
+make attack-trace ATTACK_MAX_STATES=1000000
+make attack-trace-verbose ATTACK_ACTION=bob_commit ATTACK_MAX_STATES=1000000
 ```
 
-Include state vectors when available:
+Print the generated witness in human-readable form:
 
 ```bash
-tracepp --format=states path/to/attack.trc
+make show-attack
 ```
 
-Export the trace as a graph:
+With the default settings, the trace has a name similar to:
+
+```text
+build/dy_model.lps_act_0_intruder_wins.trc
+```
+
+Remove only generated attack traces with:
 
 ```bash
-tracepp --format=dot path/to/attack.trc build/attack-trace.dot
-dot -Tpdf build/attack-trace.dot -o build/attack-trace.pdf
+make clean-attack-traces
 ```
 
 ## Interactive inspection
@@ -240,45 +275,50 @@ Open the linear process in the graphical simulator:
 lpsxsim build/dy_model.lps
 ```
 
-A generated `.trc` file can then be loaded from the simulator interface and
-traversed step by step. The complete toolchain can also be accessed through:
+A generated `.trc` file can be loaded from the simulator and traversed step by
+step. The complete graphical toolchain can also be opened with:
 
 ```bash
 mcrl2-gui
 ```
 
-## Interpreting results
-
-The relevant distinction is:
-
-- **`true` or a generated witness:** the corresponding attack is reachable
-  under the current model and bounds;
-- **`false` after complete exploration:** the property is unreachable under
-  the current model and bounds;
-- **resource limit reached:** the result is inconclusive because only part of
-  the state space was explored.
-
-Reaching `--max` in `lps2lts` without producing a `.trc` does not prove that the
-attack is absent.
-
-## Validating the Lowe Attack Trace
-
-The attack witness generated by `lps2lts` can be inspected in plain-text form with:
+To inspect a trace directly without using the Makefile:
 
 ```bash
-tracepp --format=plain \
-  build/dy_model.lps_act_0_intruder_wins.trc
+tracepp --format=plain build/dy_model.lps_act_0_intruder_wins.trc
 ```
 
-A successful secrecy-violation trace must end with:
+## Interpreting exploration results
+
+The distinction between verification and trace search is important:
+
+- `pbes2bool` evaluates a modal formula and prints its Boolean truth value;
+- `lps2lts --action=... --trace=1` searches for a concrete occurrence of an
+  action and stops after producing the requested witness;
+- reaching `--max` without producing a trace is inconclusive, because only a
+  prefix of the state space was explored;
+- completing exhaustive exploration without finding the requested action
+  establishes unreachability only for the bounded model.
+
+## Validating the Lowe attack trace
+
+The default witness can be printed with:
+
+```bash
+make show-attack
+```
+
+A successful nonce-secrecy witness ends with:
 
 ```text
 intruder_wins(nonce(nb))
 ```
 
-This action is enabled only when `nonce(nb)` belongs to the Dolev–Yao knowledge set. Therefore, its occurrence confirms that the attacker has derived Bob's fresh nonce within the configured knowledge and term-depth bounds.
+This action is enabled only when `nonce(nb)` belongs to the Dolev–Yao
+knowledge set. Its occurrence therefore confirms that the attacker derived
+Bob's fresh nonce within the configured knowledge and term-depth bounds.
 
-The generated witness is:
+An example generated witness is:
 
 ```text
 intercepted(channel_a, enc(pair(nonce(na), agent(alice)), pub(intruder)))
@@ -295,31 +335,27 @@ derive(nonce(nb))
 intruder_wins(nonce(nb))
 ```
 
-The security-relevant steps correspond to the classic Lowe attack as follows:
+The security-relevant events correspond to the Lowe attack as follows:
 
-| Trace event                                                                 | Lowe attack step                           | Interpretation                                                                                                                                     |
-| --------------------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `intercepted(channel_a, enc(pair(nonce(na), agent(alice)), pub(intruder)))` | $A \rightarrow I : \{N_A,A\}_{K_I}$      | Alice starts a legitimate session with the intruder. Because the message is encrypted with the intruder's public key, the intruder can decrypt it. |
-| `derive(pair(nonce(na), agent(alice)))`                                     | Intruder deduction                         | The intruder uses its private key to recover $N_A$ and Alice's identity.                                                                         |
-| `derive(enc(pair(nonce(na), agent(alice)), pub(bob)))`                      | $I(A) \rightarrow B : \{N_A,A\}_{K_B}$   | The intruder re-encrypts the recovered plaintext with Bob's public key, impersonating Alice.                                                       |
-| `delivered(channel_b, ...)`                                                 | Delivery to Bob                            | Bob receives a correctly shaped first NSPK message and believes that Alice initiated the session.                                                  |
-| `intercepted(channel_b, enc(pair(nonce(na), nonce(nb)), pub(alice)))`       | $B \rightarrow I(A) : \{N_A,N_B\}_{K_A}$ | Bob creates $N_B$ and sends the challenge encrypted for Alice. The intruder cannot decrypt it, but can forward it unchanged.                     |
-| `delivered(channel_a, enc(pair(nonce(na), nonce(nb)), pub(alice)))`         | $I \rightarrow A : \{N_A,N_B\}_{K_A}$    | The intruder uses Alice as a decryption oracle by forwarding Bob's challenge into Alice's original session.                                        |
-| `alice_commit(alice, intruder, nb)`                                         | Alice accepts the session                  | Alice recognises $N_A$, accepts $N_B$, and still believes that her peer is the intruder.                                                       |
-| `intercepted(channel_a, enc(nonce(nb), pub(intruder)))`                     | $A \rightarrow I : \{N_B\}_{K_I}$        | Alice returns Bob's nonce encrypted for the peer she believes she is communicating with: the intruder.                                             |
-| `derive(nonce(nb))`                                                         | Intruder deduction                         | The intruder decrypts the message with its private key and learns Bob's fresh nonce.                                                               |
-| `intruder_wins(nonce(nb))`                                                  | Secrecy violation                          | The configured goal is now contained in attacker knowledge.                                                                                        |
+| Trace event | Lowe attack step | Interpretation |
+| --- | --- | --- |
+| `intercepted(channel_a, enc(pair(nonce(na), agent(alice)), pub(intruder)))` | $A \rightarrow I : \{N_A,A\}_{K_I}$ | Alice starts a legitimate session with the intruder, which can decrypt the message. |
+| `derive(pair(nonce(na), agent(alice)))` | Intruder deduction | The intruder uses its private key to recover $N_A$ and Alice's identity. |
+| `derive(enc(pair(nonce(na), agent(alice)), pub(bob)))` | $I(A) \rightarrow B : \{N_A,A\}_{K_B}$ | The intruder re-encrypts the plaintext for Bob while impersonating Alice. |
+| `delivered(channel_b, ...)` | Delivery to Bob | Bob receives a correctly shaped first NSPK message and believes Alice initiated the session. |
+| `intercepted(channel_b, enc(pair(nonce(na), nonce(nb)), pub(alice)))` | $B \rightarrow I(A) : \{N_A,N_B\}_{K_A}$ | Bob creates $N_B$. The intruder cannot decrypt the response, but can forward it unchanged. |
+| `delivered(channel_a, enc(pair(nonce(na), nonce(nb)), pub(alice)))` | $I \rightarrow A : \{N_A,N_B\}_{K_A}$ | The intruder forwards Bob's challenge into Alice's original session. |
+| `alice_commit(alice, intruder, nb)` | Alice accepts | Alice recognises $N_A$, accepts $N_B$, and still believes her peer is the intruder. |
+| `intercepted(channel_a, enc(nonce(nb), pub(intruder)))` | $A \rightarrow I : \{N_B\}_{K_I}$ | Alice returns Bob's nonce encrypted for the peer she believes she is using. |
+| `derive(nonce(nb))` | Intruder deduction | The intruder decrypts the message with its private key and learns Bob's nonce. |
+| `intruder_wins(nonce(nb))` | Secrecy violation | The configured goal is now in attacker knowledge. |
 
-The two transitions:
+The deductions involving `nonce(ni)` are valid but irrelevant choices made by
+the nondeterministic attacker. They do not contribute to the successful path.
 
-```text
-derive(enc(nonce(ni), pub(alice)))
-derive(enc(nonce(ni), pub(bob)))
-```
+### Completing the authentication attack
 
-are valid but irrelevant Dolev–Yao deductions. They demonstrate that the attacker is nondeterministic and may derive messages unrelated to the successful attack. Removing these events from the explanation does not change the security argument.
-
-The classical Lowe attack normally continues with two additional protocol steps:
+The classical Lowe authentication attack continues with:
 
 ```text
 derive(enc(nonce(nb), pub(bob)))
@@ -327,66 +363,58 @@ delivered(channel_b, enc(nonce(nb), pub(bob)))
 bob_commit(bob, alice, nb)
 ```
 
-These correspond to:
+This corresponds to:
 
 $$
-I(A) \rightarrow B : \{N_B\}_{K_B}
+I(A) \rightarrow B : \{N_B\}_{K_B}.
 $$
 
-after which Bob completes the protocol believing that Alice is his peer.
+If the current DY process terminates immediately after
+`intruder_wins(nonce(nb))`, the generated witness proves nonce disclosure but
+cannot reach Bob's final authentication event. To search for the complete
+authentication violation, DY must report success once and then continue its
+other transitions. A Boolean process parameter such as `won` can prevent the
+victory action from being emitted repeatedly:
 
-The present witness stops earlier because the DY process is configured to terminate as soon as `nonce(nb)` enters its knowledge:
-
-```mcrl2
-(goal in knowledge) ->
-  intruder_wins(goal) . delta
+```text
+if !won and goal is known:
+    emit intruder_wins(goal)
+    continue with won = true
 ```
 
-Consequently, this trace directly proves the nonce-secrecy violation, which is the decisive enabling step of the Lowe attack, but it does not by itself show Bob's final authentication commit.
-
-To generate a complete authentication-violation trace, the attacker must be allowed to continue after reporting success. For example, the winning branch can be changed to:
-
-```mcrl2
-(goal in knowledge) ->
-  intruder_wins(goal)
-  . DY(goal, knowledge, max_knowledge, max_depth)
-```
-
-and the guards that disable `Ins`, `Sup`, and `Der1` after the goal is reached must be removed. The state space can then be searched for:
+The remaining inject, intercept, and derive branches continue while preserving
+the current value of `won`. The complete path can then be searched with:
 
 ```bash
-lps2lts \
-  --verbose \
-  --strategy=breadth \
-  --action=bob_commit \
-  --trace=1 \
-  --max=500000 \
-  --cached \
-  --rewriter=jittyc \
-  build/dy_model.lps \
-  build/authentication-attack.lts
+make attack-trace ATTACK_ACTION=bob_commit
 ```
 
-A complete Lowe authentication witness should end with:
+A full authentication witness ends with:
 
 ```text
 bob_commit(bob, alice, nb)
 ```
 
-while the preceding trace contains:
+while the related Alice event is:
 
 ```text
 alice_commit(alice, intruder, nb)
 ```
 
-and no matching:
+The mismatch captures the authentication failure: Bob completes believing
+Alice is his peer, whereas Alice completed the related session believing she
+was communicating with the intruder.
 
-```text
-alice_commit(alice, bob, nb)
-```
+## Continuous integration
 
-This mismatch captures the authentication failure: Bob completes the protocol believing that Alice is his peer, whereas Alice completed the related session believing that she was communicating with the intruder.
+The GitHub Actions workflow in `.github/workflows/ci.yml` can invoke the same
+Make targets used locally. A lightweight CI should run `make build` on every
+push. Expensive PBES verification or attack searches can be placed in separate
+jobs with explicit time and state limits.
 
+The badge at the top of this document reports the most recent completed CI run
+for the relevant branch. A self-hosted workflow requires an online runner with
+mCRL2 and the other dependencies already installed.
 
 ## Scope and limitations
 
@@ -394,7 +422,7 @@ mCRL2DY is a research and teaching demonstrator, not a production protocol
 verification framework. In particular:
 
 - the example models one Alice session and one Bob session;
-- cryptography is perfect and symbolic, following the Dolev-Yao abstraction;
+- cryptography is perfect and symbolic, following the Dolev–Yao abstraction;
 - attacker knowledge and term depth are bounded;
 - the well-typed attacker generates only protocol-relevant NSPK terms;
 - freshness, session replication, compromised principals, and additional
@@ -404,4 +432,4 @@ verification framework. In particular:
 The structure is intentionally modular: other honest protocols can replace the
 contents of `example/`, while the attacker process can be extended with the
 corresponding constructors, destructors, initial knowledge, channels, and
-security goal.
+security goals.
