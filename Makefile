@@ -81,7 +81,7 @@ attack-trace: $(ATTACK_LPS)
 	@rm -f $(ATTACK_TRACE_GLOB)
 	lps2lts \
 		--cached \
-		--strategy=breadth \
+		--strategy=depth \
 		--max=$(ATTACK_MAX_STATES) \
 		--action=$(ATTACK_ACTION) \
 		--trace=1 \
